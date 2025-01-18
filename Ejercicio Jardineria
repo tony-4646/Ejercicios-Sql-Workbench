@@ -1,111 +1,126 @@
+--- Listar información básica de las oficinas:
 SELECT codigo_oficina, ciudad, pais, region FROM oficina;
+
+--- Obtener los empleados por oficina:
 SELECT codigo_oficina, nombre, apellido1, puesto FROM empleado ORDER BY codigo_oficina;
+
+--- Calcular el promedio de salario (límite de crédito) de los clientes por región:
 SELECT region, AVG(limite_credito) AS avglimite_credito FROM cliente GROUP BY region;
 
+--- Listar clientes con sus representantes de ventas:
 SELECT x.nombre_cliente, CONCAT(y.nombre, ' ', y.apellido1) AS Representante 
 FROM cliente x 
 JOIN empleado y ON codigo_empleado_rep_ventas = y.codigo_empleado;
 
+--- Obtener productos disponibles y en stock:
 SELECT codigo_producto, nombre, cantidad_en_stock FROM producto;
 
+--- Productos con precios por debajo del promedio:
 SELECT codigo_producto, nombre, precio_venta 
 FROM producto
 WHERE precio_venta < (SELECT AVG(precio_venta) FROM producto);
 
+--- Pedidos pendientes por cliente:
 SELECT y.nombre_cliente, x.codigo_pedido, x.estado
 FROM pedido x
 JOIN cliente y ON x.codigo_cliente = y.codigo_cliente
 WHERE estado != 'Entregado';
 
+--- Total de productos por categoría (gama):
 SELECT gama, COUNT(*) AS gama_producto
 FROM product
 GROUP BY gama;
 
+--- Ingresos totales generados por cliente:
 SELECT x.nombre_cliente, SUM(pag.total) AS ingresos_totales 
 FROM cliente x
 JOIN pago pag ON x.codigo_cliente = pag.codigo_cliente
 GROUP BY x.nombre_cliente;
 
+--- Pedidos realizados en un rango de fechas:
 SELECT codigo_pedido, fecha_pedido 
 FROM pedido
 WHERE fecha_pedido BETWEEN '2007-01-01' AND '2008-06-20';
 
+--- Detalles de un pedido específico:
 SELECT x.codigo_pedido, y.nombre, x.cantidad, (x.cantidad * x.precio_unidad) AS total
 FROM detalle_pedido x
 JOIN producto y ON x.codigo_producto = y.codigo_producto
 WHERE x.codigo_pedido = 48;
 
-
+--- Productos más vendidos:
 SELECT x.nombre, SUM(y.cantidad) AS total 
 FROM detalle_pedido y
 JOIN producto x ON y.codigo_producto = x.codigo_producto
 GROUP BY x.nombre
 ORDER BY total DESC;
 
+--- Pedidos con un valor total superior al promedio:
 SELECT x.codigo_pedido, SUM(x.cantidad * x.precio_unidad) AS total 
 FROM detalle_pedido x
 GROUP BY x.codigo_pedido
 HAVING total > (SELECT AVG(x2.cantidad * x2.precio_unidad) FROM detalle_pedido x2);
 
+--- Clientes sin representante de ventas asignado:
 SELECT nombre_cliente 
 FROM cliente
 WHERE codigo_empleado_rep_ventas IS NULL;
 
+--- Número total de empleados por oficina:
 SELECT codigo_oficina, COUNT(*) AS total_en_oficinas
 FROM empleado
 GROUP BY codigo_oficina;
 
+--- Pagos realizados en una forma específica:
 SELECT codigo_cliente,forma_pago,id_transaccion,fecha_pago,total
 FROM pago
 WHERE forma_pago = 'PayPal';
 
+--- Ingresos mensuales:
 SELECT MONTH(fecha_pago) AS mes, SUM(total) AS ingresos_totales 
 FROM pago
 GROUP BY mes;
 
-SELECT x.nombre_cliente, COUNT(y.codigo_pedido) AS total_pedidos 
-FROM cliente x
-JOIN pedido y ON x.codigo_cliente = y.codigo_cliente
-GROUP BY x.nombre_cliente
-HAVING total_pedidos > 1;
-
+--- Clientes con múltiples pedidos: 
 SELECT x.nombre_cliente, COUNT(y.codigo_pedido) AS pedidos 
 FROM cliente x
 JOIN pedido y ON x.codigo_cliente = y.codigo_cliente
 GROUP BY x.nombre_cliente
 HAVING pedidos > 1;
 
+--- Pedidos con productos agotados:
 SELECT x.codigo_pedido, y.cantidad_en_stock 
 FROM detalle_pedido x
 JOIN producto y ON x.codigo_producto = y.codigo_producto
 WHERE y.cantidad_en_stock =0;
+
+--- Promedio, máximo y mínimo del límite de crédito de los clientes por país:
 SELECT pais, AVG(limite_credito) AS promedio, MAX(limite_credito) AS max, MIN(limite_credito) AS min
 FROM cliente
 GROUP BY pais;
 
+--- Historial de transacciones de un cliente:
 SELECT fecha_pago, total, forma_pago 
 FROM pago
 WHERE codigo_cliente = 38;
 
+--- Empleados sin jefe directo asignado:
 SELECT nombre, apellido1, codigo_jefe
 FROM empleado
 WHERE codigo_jefe IS NULL;
 
+--- Productos cuyo precio supera el promedio de su categoría (gama):
 SELECT codigo_producto, nombre, gama, precio_venta 
 FROM producto x
 WHERE precio_venta > (SELECT AVG(precio_venta) FROM producto x2 WHERE x2.gama = x.gama);
 
+---Promedio de días de entrega por estado:
 SELECT estado, AVG(DATEDIFF(fecha_entrega, fecha_pedido)) AS promedio
 FROM pedido
 WHERE fecha_entrega IS NOT NULL
 GROUP BY estado;
 
-SELECT pais, COUNT(DISTINCT c.codigo_cliente) AS clientes_con_multiples_pedidos 
-FROM cliente c
-JOIN pedido p ON c.codigo_cliente = p.codigo_cliente
-GROUP BY país
-HAVING clientes_con_multiples_pedidos > 1;
-
+---Clientes por país con más de un pedido: 
 SELECT pais, COUNT(DISTINCT x.codigo_cliente) AS clientes_multiples_pedidos 
 FROM cliente x
 JOIN pedido y ON x.codigo_cliente = y.codigo_cliente
